@@ -45,7 +45,7 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
     _attr_hvac_mode = HVACMode.AUTO
     _attr_target_temperature_step = 0.1
-    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE  | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     controller: OpenThermController
@@ -62,6 +62,7 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
         self.controller = web_api.get_controller()
         self._attr_unique_id = f"climate_{self.controller.device_id}"
         self._attr_name = "Thermostat"
+        self._enable_turn_on_off_backwards_compatibility = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.controller.device_id)},
             name="OpenThermWeb",
@@ -111,3 +112,9 @@ class OpenThermClimate(CoordinatorEntity[OpenThermWebCoordinator], ClimateEntity
         self.web_api.set_hvac_mode(hvac_mode == HVACMode.AUTO)
         self.refresh()
         self.schedule_update_ha_state(force_refresh=False)
+
+    def turn_off(self) -> None:
+        self.set_hvac_mode(HVACMode.OFF)
+
+    def turn_on(self) -> None:
+        self.set_hvac_mode(HVACMode.AUTO)
